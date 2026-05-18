@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FYP Booth Quiz – Audit & IFRS Challenge</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0a2342 0%, #1565c0 50%, #0a2342 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .container {
+    background: white;
+    border-radius: 20px;
+    max-width: 560px;
+    width: 100%;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .header {
+    background: linear-gradient(135deg, #0a2342, #1565c0);
+    color: white;
+    padding: 28px 28px 22px;
+    text-align: center;
+  }
+  .header .tag {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 8px;
+  }
+  .header h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .header p { font-size: 13px; opacity: 0.8; }
+  .mode-tabs { display: flex; border-bottom: 2px solid #f0f0f0; }
+  .mode-tab {
+    flex: 1;
+    padding: 13px 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #888;
+    border: none;
+    background: white;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+  }
+  .mode-tab.active { color: #0a2342; border-bottom-color: #1565c0; }
+  .quiz-area { padding: 28px; }
+  .progress-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .progress-label { font-size: 12px; color: #888; font-weight: 600; letter-spacing: 0.5px; }
+  .score-badge {
+    background: #e8f0fe;
+    color: #1565c0;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+  .progress-bar {
+    height: 6px;
+    background: #f0f0f0;
+    border-radius: 3px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #1565c0, #42a5f5);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+  .question-type {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .type-mcq { background: #eff6ff; color: #1d4ed8; }
+  .type-tf { background: #fef3c7; color: #92400e; }
+  .question-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0a2342;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .scenario-box {
+    background: #f0f4ff;
+    border-left: 3px solid #1565c0;
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    color: #444;
+    margin-bottom: 18px;
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .option-btn {
+    width: 100%;
+    text-align: left;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 2px solid #e8e8e8;
+    background: white;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: inherit;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: #1565c0;
+    background: #f0f4ff;
+    transform: translateX(2px);
+  }
+  .option-btn .opt-label { font-weight: 700; color: #1565c0; min-width: 22px; }
+  .option-btn.correct { border-color: #16a34a; background: #f0fdf4; color: #166534; }
+  .option-btn.wrong { border-color: #dc2626; background: #fef2f2; color: #991b1b; }
+  .option-btn.reveal { border-color: #d1fae5; background: #f0fdf4; opacity: 0.6; }
+  .feedback-box {
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 18px;
+    display: none;
+  }
+  .feedback-box.show { display: block; }
+  .feedback-box.correct { background: #f0fdf4; border: 1px solid #86efac; color: #166534; }
+  .feedback-box.wrong { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
+  .fb-title { font-weight: 700; margin-bottom: 6px; font-size: 15px; }
+  .next-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #0a2342, #1565c0);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-family: inherit;
+  }
+  .next-btn:hover { opacity: 0.88; }
+  .results-area {
+    padding: 36px 28px;
+    text-align: center;
+    display: none;
+  }
+  .results-area.show { display: block; }
+  .results-icon { font-size: 60px; margin-bottom: 14px; }
+  .results-score { font-size: 40px; font-weight: 800; color: #0a2342; margin-bottom: 4px; }
+  .results-pct { font-size: 14px; color: #888; margin-bottom: 22px; }
+  .results-msg {
+    background: #e8f0fe;
+    border-radius: 12px;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: #0d47a1;
+    margin-bottom: 24px;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .restart-btn {
+    padding: 13px 36px;
+    background: linear-gradient(135deg, #0a2342, #1565c0);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    font-family: inherit;
+  }
+  .restart-btn:hover { opacity: 0.88; }
+  .hide { display: none !important; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div class="tag">FYP Booth Activity · UTB School of Business</div>
+    <h1>Audit &amp; IFRS Challenge</h1>
+    <p>Test your knowledge — quick questions on audit quality &amp; IFRS!</p>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('all')">All Questions</button>
+    <button class="mode-tab" onclick="setMode('audit')">Mini Audit</button>
+    <button class="mode-tab" onclick="setMode('myth')">Myth or Fact</button>
+  </div>
+
+  <div class="quiz-area" id="quizArea">
+    <div class="progress-row">
+      <span class="progress-label" id="progressLabel">Question 1 of 6</span>
+      <span class="score-badge" id="scoreBadge">Score: 0</span>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <span class="question-type" id="qType"></span>
+    <div class="question-text" id="qText"></div>
+    <div class="scenario-box" id="scenarioBox" style="display:none"></div>
+    <div class="options" id="optionsArea"></div>
+    <div class="feedback-box" id="feedbackBox">
+      <div class="fb-title" id="fbTitle"></div>
+      <div id="fbText"></div>
+    </div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()" style="display:none">Next Question →</button>
+  </div>
+
+  <div class="results-area" id="resultsArea">
+    <div class="results-icon" id="resultsIcon">🎓</div>
+    <div class="results-score" id="resultsScore"></div>
+    <div class="results-pct" id="resultsPct"></div>
+    <div class="results-msg" id="resultsMsg"></div>
+    <button class="restart-btn" onclick="restart()">Play Again</button>
+  </div>
+</div>
+
+<script>
+const allQuestions = [
+  {
+    mode: 'audit',
+    type: 'MCQ',
+    scenario: '"A company records revenue before goods are delivered to customers."',
+    question: 'What is the main audit concern here?',
+    options: ['Inventory valuation', 'Revenue overstatement', 'Employee fraud', 'Tax payable'],
+    answer: 1,
+    feedback: '✅ Revenue should only be recognised when performance obligations are satisfied (IFRS 15). Recording it early overstates revenue — a key audit risk that requires strong practitioner competency to detect.'
+  },
+  {
+    mode: 'audit',
+    type: 'MCQ',
+    scenario: null,
+    question: 'Which competency is most important for applying IFRS correctly?',
+    options: ['Experience only', 'Technical IFRS knowledge only', 'Both knowledge and experience', 'Neither — IFRS is straightforward'],
+    answer: 2,
+    feedback: '✅ Both are essential. Technical knowledge provides the framework; experience enables sound professional judgment in complex situations. This is a core finding in audit quality research.'
+  },
+  {
+    mode: 'myth',
+    type: 'TRUE / FALSE',
+    scenario: null,
+    question: '"IFRS is fully rule-based."',
+    options: ['✅ True', '❌ False — this is a Myth'],
+    answer: 1,
+    feedback: 'MYTH! IFRS is principles-based, not rule-based. Practitioners must apply professional judgment rather than follow rigid rules — which is exactly why competency matters.'
+  },
+  {
+    mode: 'myth',
+    type: 'TRUE / FALSE',
+    scenario: null,
+    question: '"High audit quality can improve the usefulness of financial reporting."',
+    options: ['✅ True — this is a Fact', '❌ False — this is a Myth'],
+    answer: 0,
+    feedback: 'FACT! High audit quality enhances the reliability and credibility of financial statements, making them more useful to investors and other stakeholders.'
+  },
+  {
+    mode: 'myth',
+    type: 'TRUE / FALSE',
+    scenario: null,
+    question: '"Experience alone guarantees high audit quality."',
+    options: ['✅ True', '❌ False — this is a Myth'],
+    answer: 1,
+    feedback: 'MYTH! Experience is valuable, but without up-to-date technical IFRS knowledge, auditors may still miss critical issues. Both dimensions of competency are required.'
+  },
+  {
+    mode: 'myth',
+    type: 'TRUE / FALSE',
+    scenario: null,
+    question: '"Professional judgment is important in IFRS reporting."',
+    options: ['✅ True — this is a Fact', '❌ False — this is a Myth'],
+    answer: 0,
+    feedback: 'FACT! Because IFRS is principles-based, professional judgment is central to how standards are applied. This links directly to practitioner competency — the focus of this FYP.'
+  }
+];
+
+let currentMode = 'all';
+let questions = [];
+let current = 0;
+let score = 0;
+let answered = false;
+
+function setMode(mode) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-tab').forEach((t, i) => {
+    t.classList.toggle('active', ['all','audit','myth'][i] === mode);
+  });
+  restart();
+}
+
+function restart() {
+  if (currentMode === 'all') questions = [...allQuestions];
+  else questions = allQuestions.filter(q => q.mode === currentMode);
+  current = 0; score = 0; answered = false;
+  document.getElementById('resultsArea').classList.remove('show');
+  document.getElementById('quizArea').classList.remove('hide');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[current];
+  const total = questions.length;
+
+  document.getElementById('progressLabel').textContent = 'Question ' + (current+1) + ' of ' + total;
+  document.getElementById('scoreBadge').textContent = 'Score: ' + score;
+  document.getElementById('progressFill').style.width = ((current / total) * 100) + '%';
+
+  const typeEl = document.getElementById('qType');
+  typeEl.textContent = q.type;
+  typeEl.className = 'question-type ' + (q.type === 'MCQ' ? 'type-mcq' : 'type-tf');
+
+  document.getElementById('qText').textContent = q.question;
+
+  const sb = document.getElementById('scenarioBox');
+  if (q.scenario) { sb.style.display = 'block'; sb.textContent = q.scenario; }
+  else { sb.style.display = 'none'; }
+
+  const opts = document.getElementById('optionsArea');
+  opts.innerHTML = '';
+  const labels = ['A','B','C','D'];
+  q.options.forEach(function(opt, i) {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    if (q.type === 'MCQ') {
+      btn.innerHTML = '<span class="opt-label">' + labels[i] + '</span>' + opt;
+    } else {
+      btn.textContent = opt;
+    }
+    btn.onclick = function() { selectAnswer(i); };
+    opts.appendChild(btn);
+  });
+
+  document.getElementById('feedbackBox').className = 'feedback-box';
+  document.getElementById('nextBtn').style.display = 'none';
+  answered = false;
+}
+
+function selectAnswer(idx) {
+  if (answered) return;
+  answered = true;
+  const q = questions[current];
+  const btns = document.querySelectorAll('.option-btn');
+  const isCorrect = idx === q.answer;
+  if (isCorrect) score++;
+
+  btns.forEach(function(btn, i) {
+    btn.disabled = true;
+    if (i === q.answer) btn.classList.add('correct');
+    else if (i === idx && !isCorrect) btn.classList.add('wrong');
+    else btn.classList.add('reveal');
+  });
+
+  const fb = document.getElementById('feedbackBox');
+  fb.className = 'feedback-box show ' + (isCorrect ? 'correct' : 'wrong');
+  document.getElementById('fbTitle').textContent = isCorrect ? '✅ Correct!' : '❌ Not quite — here\'s why:';
+  document.getElementById('fbText').textContent = q.feedback;
+
+  const nextBtn = document.getElementById('nextBtn');
+  nextBtn.style.display = 'block';
+  nextBtn.textContent = current < questions.length - 1 ? 'Next Question →' : 'See My Results →';
+  document.getElementById('scoreBadge').textContent = 'Score: ' + score;
+}
+
+function nextQuestion() {
+  current++;
+  if (current >= questions.length) showResults();
+  else loadQuestion();
+}
+
+function showResults() {
+  document.getElementById('quizArea').classList.add('hide');
+  const r = document.getElementById('resultsArea');
+  r.classList.add('show');
+  const total = questions.length;
+  const pct = Math.round((score / total) * 100);
+
+  document.getElementById('resultsScore').textContent = score + ' / ' + total;
+  document.getElementById('resultsPct').textContent = pct + '% correct';
+
+  let icon, msg;
+  if (pct === 100) {
+    icon = '🏆';
+    msg = 'Perfect score! You have an excellent grasp of audit quality and IFRS principles. Practitioners with your level of competency are exactly what strong financial reporting needs!';
+  } else if (pct >= 67) {
+    icon = '🎓';
+    msg = 'Great effort! You have a solid foundation in IFRS and audit concepts. This FYP explores exactly how practitioner competency — both knowledge and experience — shapes audit quality outcomes.';
+  } else {
+    icon = '📚';
+    msg = 'Good try! This quiz covers how practitioner competency affects IFRS application and audit quality. The research behind this FYP investigates that relationship in the context of Brunei SME audits.';
+  }
+
+  document.getElementById('resultsIcon').textContent = icon;
+  document.getElementById('resultsMsg').textContent = msg;
+}
+
+restart();
+</script>
+</body>
+</html>
